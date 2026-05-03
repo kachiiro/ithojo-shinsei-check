@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>2026 デジタル化・AI導入補助金 申請可否チェック</title>
+    <meta
+      name="description"
+      content="2026年のデジタル化・AI導入補助金（IT導入補助金）の申請可否を、対話形式で簡易チェックできる静的Webサイトです。"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <p class="hero__eyebrow">簡易セルフチェック</p>
+        <h1>2026 デジタル化・AI導入補助金 申請可否チェック</h1>
+        <p class="hero__lead">
+          過去の交付決定状況に応じて、2026年の通常枠・インボイス枠の申請可否を確認できます。
+        </p>
+      </header>
+
+      <section class="workspace-card" aria-labelledby="workspace-title">
+        <h2 class="sr-only" id="workspace-title">機能切り替え</h2>
+
+        <div class="tab-list" role="tablist" aria-label="機能切り替え">
+          <button
+            type="button"
+            class="tab-button is-active"
+            id="tab-button-check"
+            role="tab"
+            aria-selected="true"
+            aria-controls="tab-panel-check"
+            tabindex="0"
+          >
+            申請可否チェック
+          </button>
+          <button
+            type="button"
+            class="tab-button"
+            id="tab-button-search"
+            role="tab"
+            aria-selected="false"
+            aria-controls="tab-panel-search"
+            tabindex="-1"
+          >
+            採択者検索
+          </button>
+        </div>
+
+        <section id="tab-panel-check" class="tab-panel" role="tabpanel" aria-labelledby="tab-button-check">
+          <main class="app-card" id="app" aria-live="polite" aria-atomic="true">
+            <noscript>
+              <p class="noscript">
+                このサイトはJavaScriptを使用します。ブラウザの設定でJavaScriptを有効にしてください。
+              </p>
+            </noscript>
+          </main>
+        </section>
+
+        <section
+          id="tab-panel-search"
+          class="tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-button-search"
+          hidden
+        >
+          <section class="search-card" id="search-app" aria-labelledby="search-title">
+            <div class="section-heading">
+              <p class="section-heading__eyebrow">採択者検索</p>
+              <h2 id="search-title">2022-2025採択者一覧 検索</h2>
+              <p class="section-heading__lead">
+                2018-2025採択者一覧.csv から 2022〜2025年度・必要項目のみを抽出したJSONを使い、
+                法人番号または事業者名・個人事業主名・屋号で検索できます。
+              </p>
+            </div>
+          </section>
+        </section>
+      </section>
+    </div>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
