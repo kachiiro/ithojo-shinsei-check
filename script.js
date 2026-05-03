@@ -87,7 +87,7 @@ const searchState = {
   loading: false,
   loaded: false,
   error: "",
-  statusMessage: "法人番号または事業者名・個人事業主名・屋号を入力して検索できます。初回検索時に2022〜2025年度の検索JSONを読み込みます。",
+  statusMessage: "",
   sourceLabel: "2022〜2025検索JSON 未読込",
   records: [],
   lastResults: [],
@@ -457,7 +457,7 @@ function resetSearch() {
   searchState.lastResults = [];
   searchState.statusMessage = searchState.loaded
     ? `${searchState.records.length.toLocaleString("ja-JP")}件の2022〜2025年度採択者一覧を検索できます。`
-    : "法人番号または事業者名・個人事業主名・屋号を入力して検索できます。初回検索時に2022〜2025年度の検索JSONを読み込みます。";
+    : "";
 
   renderSearch();
 }
@@ -567,13 +567,9 @@ function renderSearch() {
         </form>
       </div>
 
-      <div class="info-block">
-        <h3>データ読込状態</h3>
-        <p class="search-status">現在の状態: ${escapeHtml(searchState.sourceLabel)}</p>
-        <p class="field__hint">検索対象は 2022〜2025年度です。初回検索時のみ、軽量化した検索JSONを読み込んで検索用データを準備します。</p>
-      </div>
-
-      <p class="search-status" role="status">${escapeHtml(searchState.error || searchState.statusMessage)}</p>
+      ${searchState.error || searchState.statusMessage
+        ? `<p class="search-status" role="status">${escapeHtml(searchState.error || searchState.statusMessage)}</p>`
+        : ""}
 
       <section class="search-results" aria-labelledby="search-results-title">
         <h3 id="search-results-title">検索結果</h3>
