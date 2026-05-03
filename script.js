@@ -62,12 +62,6 @@ const results = {
   },
 };
 
-const legendItems = [
-  { symbol: "○", text: "2026申請可" },
-  { symbol: "△", text: "12カ月待機後申請可" },
-  { symbol: "×", text: "2026申請不可" },
-];
-
 const app = document.getElementById("app");
 const searchApp = document.getElementById("search-app");
 const checkTabButton = document.getElementById("tab-button-check");
@@ -200,12 +194,6 @@ function renderHistory() {
     .join("");
 }
 
-function renderLegend() {
-  return legendItems
-    .map((item) => `<li><strong>${escapeHtml(item.symbol)}</strong>：${escapeHtml(item.text)}</li>`)
-    .join("");
-}
-
 function renderResult() {
   const result = results[state.resultId];
 
@@ -221,13 +209,6 @@ function renderResult() {
         ${renderStatusCard(result.normal)}
         ${renderStatusCard(result.invoice)}
       </div>
-
-      <section class="info-block" aria-labelledby="legend-title">
-        <h3 id="legend-title">凡例</h3>
-        <ul class="legend-list">
-          ${renderLegend()}
-        </ul>
-      </section>
 
       <section class="info-block" aria-labelledby="history-title">
         <h3 id="history-title">回答履歴</h3>
@@ -455,9 +436,7 @@ function resetSearch() {
   searchState.criteria.corporateNumber = "";
   searchState.criteria.name = "";
   searchState.lastResults = [];
-  searchState.statusMessage = searchState.loaded
-    ? `${searchState.records.length.toLocaleString("ja-JP")}件の2022〜2025年度採択者一覧を検索できます。`
-    : "";
+  searchState.statusMessage = "";
 
   renderSearch();
 }
