@@ -1,0 +1,23 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - paragraph [ref=e4]: 簡易セルフチェック
+    - heading "2026 デジタル化・AI導入補助金 申請可否チェック" [level=1] [ref=e5]
+    - paragraph [ref=e6]: 過去の交付決定状況に応じて、2026年の通常枠・インボイス枠の申請可否を確認できます。
+  - region "機能切り替え" [ref=e7]:
+    - heading "機能切り替え" [level=2] [ref=e8]
+    - tablist "機能切り替え" [ref=e9]:
+      - tab "申請可否チェック" [selected] [ref=e10] [cursor=pointer]
+      - tab "採択者検索" [ref=e11] [cursor=pointer]
+    - tabpanel "申請可否チェック" [ref=e12]:
+      - main [ref=e13]:
+        - region "進行状況" [ref=e14]:
+          - generic [ref=e15]:
+            - strong [ref=e16]: 質問 1 / 4
+            - generic [ref=e17]: 回答に応じて次の質問または判定結果を表示します。
+        - region "これまでにIT導入補助金の交付決定を受けたことがありますか？" [ref=e20]:
+          - generic [ref=e21]:
+            - paragraph [ref=e22]: 質問に対して、現在の状況に近い回答を選択してください。
+            - heading "これまでにIT導入補助金の交付決定を受けたことがありますか？" [level=2] [ref=e23]
+          - generic [ref=e24]:
+            - button "これまでにIT導入補助金の交付決定を受けたことがありますか？ はい" [ref=e25] [cursor=pointer]: はい
+            - button "これまでにIT導入補助金の交付決定を受けたことがありますか？ いいえ" [ref=e26] [cursor=pointer]: いいえ

@@ -1,64 +1,61 @@
-const questions = {
-  q1: {
-    id: "q1",
-    step: 1,
-    text: "これまでにIT導入補助金の交付決定を受けたことがありますか？",
-    yes: { type: "question", next: "q2" },
-    no: { type: "result", next: "E" },
-  },
-  q2: {
-    id: "q2",
-    step: 2,
-    text: "2022〜2025年に「インボイス枠」または「デジタル化基盤導入枠」で交付決定を受けましたか？",
-    yes: { type: "question", next: "q3" },
-    no: { type: "question", next: "q4" },
-  },
-  q3: {
-    id: "q3",
-    step: 3,
-    text: "2025年に通常枠で交付決定を受けましたか？",
-    yes: { type: "result", next: "A" },
-    no: { type: "result", next: "B" },
-  },
-  q4: {
-    id: "q4",
-    step: 4,
-    text: "2025年に通常枠で交付決定を受けましたか？",
-    yes: { type: "result", next: "C" },
-    no: { type: "result", next: "D" },
-  },
-};
+const historyOptions = [
+  { value: "none", label: "なし" },
+  { value: "2025", label: "2025" },
+  { value: "2022-2024", label: "2022〜2024" },
+  { value: "2021-or-earlier", label: "2021以前" },
+];
 
-const results = {
+const VALID_HISTORY_VALUES = new Set(historyOptions.map((option) => option.value));
+const MAX_CORPORATE_NUMBER_LENGTH = 13;
+const MAX_NAME_QUERY_LENGTH = 120;
+const MAX_RECORD_FIELD_LENGTH = 160;
+const MAX_SEARCH_RECORD_COUNT = 200000;
+
+const resultPatterns = {
   A: {
     title: "判定結果 A",
-    summary: "直近の交付決定状況により、通常枠は待機期間後、インボイス枠は2026年申請不可です。",
-    normal: { symbol: "△", label: "通常枠", detail: "12カ月待機後申請可", tone: "wait" },
-    invoice: { symbol: "×", label: "インボイス枠", detail: "2026申請不可", tone: "ng" },
+    summary: "インボイス枠・通常枠ともに2026年申請可です。",
+    requirementTitle: "申請要件",
+    requirementBody: "なし",
+    additionalTitle: "加点要件",
+    additionalBody:
+      "賃金引上げは任意で選択可です。する（3%計画）は計画未達成時の場合に18か月大幅減点注意。しない（1.7%計画）は計画達成必要なし。",
   },
   B: {
     title: "判定結果 B",
-    summary: "通常枠・インボイス枠ともに2026年の申請対象です。",
-    normal: { symbol: "○", label: "通常枠", detail: "2026申請可", tone: "ok" },
-    invoice: { symbol: "○", label: "インボイス枠", detail: "2026申請可", tone: "ok" },
+    summary: "通常枠は2026年申請可、インボイス枠は2026年申請不可です。",
+    requirementTitle: "申請要件",
+    requirementBody:
+      "賃金引上げが必須です。3.5%計画が未達成の場合に補助金全額返還。",
+    additionalTitle: "加点要件",
+    additionalBody: "一般加点要件は選択可です。ペナルティなし。",
   },
   C: {
     title: "判定結果 C",
-    summary: "直近の交付決定状況により、通常枠は待機期間後、インボイス枠は2026年申請不可です。",
-    normal: { symbol: "△", label: "通常枠", detail: "12カ月待機後申請可", tone: "wait" },
-    invoice: { symbol: "×", label: "インボイス枠", detail: "2026申請不可", tone: "ng" },
+    summary: "通常枠は12カ月待機後申請可、インボイス枠は2026年申請不可です。",
+    requirementTitle: "申請要件",
+    requirementBody:
+      "賃金引上げが必須です。3.5%計画が未達成の場合に補助金全額返還。",
+    additionalTitle: "加点要件",
+    additionalBody: "一般加点要件は選択可です。ペナルティなし。",
   },
   D: {
     title: "判定結果 D",
-    summary: "通常枠・インボイス枠ともに2026年の申請対象です。",
-    normal: { symbol: "○", label: "通常枠", detail: "2026申請可", tone: "ok" },
-    invoice: { symbol: "○", label: "インボイス枠", detail: "2026申請可", tone: "ok" },
+    summary: "インボイス枠・通常枠ともに2026年申請可です。",
+    requirementTitle: "申請要件",
+    requirementBody:
+      "賃金引上げが必須です。3.5%計画が未達成の場合に補助金全額返還。",
+    additionalTitle: "加点要件",
+    additionalBody: "一般加点要件は選択可です。ペナルティなし。",
   },
   E: {
     title: "判定結果 E",
-    summary: "初回申請想定のため、通常枠・インボイス枠ともに2026年の申請対象です。",
-    normal: { symbol: "○", label: "通常枠", detail: "2026申請可", tone: "ok" },
-    invoice: { symbol: "○", label: "インボイス枠", detail: "2026申請可", tone: "ok" },
+    summary: "インボイス枠は2026年申請可、通常枠は12カ月待機後申請可です。",
+    requirementTitle: "申請要件",
+    requirementBody:
+      "賃金引上げが必須です。3.5%計画が未達成の場合に補助金全額返還。",
+    additionalTitle: "加点要件",
+    additionalBody: "一般加点要件は選択可です。ペナルティなし。",
   },
 };
 
@@ -72,9 +69,10 @@ const SEARCH_RESULT_LIMIT = 100;
 const SEARCH_DATA_JSON_PATH = "./search-data-2022-2025.json";
 
 const state = {
-  currentQuestionId: "q1",
+  invoiceHistory: "",
+  normalHistory: "",
   resultId: null,
-  answers: [],
+  error: "",
 };
 
 const searchState = {
@@ -95,19 +93,8 @@ const uiState = {
   activeTab: "check",
 };
 
-function resetState() {
-  state.currentQuestionId = "q1";
-  state.resultId = null;
-  state.answers = [];
-  render();
-}
-
-function getAnswerLabel(value) {
-  return value ? "はい" : "いいえ";
-}
-
 function escapeHtml(text) {
-  return text
+  return String(text)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -115,57 +102,67 @@ function escapeHtml(text) {
     .replaceAll("'", "&#39;");
 }
 
-function renderProgress(step) {
-  const total = 4;
-  const ratio = Math.max(1, step) / total;
-
-  return `
-    <section class="progress" aria-label="進行状況">
-      <div class="progress__meta">
-        <strong>質問 ${step} / ${total}</strong>
-        <span>回答に応じて次の質問または判定結果を表示します。</span>
-      </div>
-      <div class="progress__bar" aria-hidden="true">
-        <div class="progress__fill" style="width: ${ratio * 100}%"></div>
-      </div>
-    </section>
-  `;
+function isValidHistoryValue(value) {
+  return VALID_HISTORY_VALUES.has(value);
 }
 
-function renderQuestion() {
-  const question = questions[state.currentQuestionId];
+function toSafeText(value, maxLength = MAX_RECORD_FIELD_LENGTH) {
+  const text = typeof value === "string" ? value : String(value ?? "");
+  return text.trim().slice(0, maxLength);
+}
 
-  app.innerHTML = `
-    ${renderProgress(question.step)}
-    <section class="question-panel" aria-labelledby="question-title">
-      <div>
-        <p class="question-copy">質問に対して、現在の状況に近い回答を選択してください。</p>
-        <h2 id="question-title">${escapeHtml(question.text)}</h2>
-      </div>
-      <div class="button-row">
-        <button
-          type="button"
-          class="answer-button"
-          data-answer="yes"
-          aria-label="${escapeHtml(question.text)} はい"
-        >
-          はい
-        </button>
-        <button
-          type="button"
-          class="answer-button"
-          data-answer="no"
-          aria-label="${escapeHtml(question.text)} いいえ"
-        >
-          いいえ
-        </button>
-      </div>
-    </section>
-  `;
+function sanitizeCorporateNumberInput(value) {
+  return normalizeCorporateNumber(toSafeText(value, MAX_CORPORATE_NUMBER_LENGTH)).slice(0, MAX_CORPORATE_NUMBER_LENGTH);
+}
 
-  app.querySelectorAll("[data-answer]").forEach((button) => {
-    button.addEventListener("click", () => handleAnswer(button.dataset.answer === "yes"));
-  });
+function sanitizeNameInput(value) {
+  return toSafeText(value, MAX_NAME_QUERY_LENGTH);
+}
+
+function resetState() {
+  state.invoiceHistory = "";
+  state.normalHistory = "";
+  state.resultId = null;
+  state.error = "";
+  render();
+}
+
+function getInvoiceStatus(history) {
+  if (history === "none" || history === "2021-or-earlier") {
+    return { symbol: "○", label: "インボイス枠", detail: "2026申請可", tone: "ok" };
+  }
+
+  return { symbol: "×", label: "インボイス枠", detail: "2026申請不可", tone: "ng" };
+}
+
+function getNormalStatus(history) {
+  if (history === "2025") {
+    return { symbol: "△", label: "通常枠", detail: "12カ月待機後申請可", tone: "wait" };
+  }
+
+  return { symbol: "○", label: "通常枠", detail: "2026申請可", tone: "ok" };
+}
+
+function determineResultId(invoiceHistory, normalHistory) {
+  const invoiceAllowed = invoiceHistory === "none" || invoiceHistory === "2021-or-earlier";
+
+  if (invoiceAllowed) {
+    if (normalHistory === "2025") {
+      return "E";
+    }
+
+    if (normalHistory === "2022-2024") {
+      return "D";
+    }
+
+    return "A";
+  }
+
+  if (normalHistory === "2025") {
+    return "C";
+  }
+
+  return "B";
 }
 
 function renderStatusCard(item) {
@@ -180,83 +177,135 @@ function renderStatusCard(item) {
   `;
 }
 
-function renderHistory() {
-  return state.answers
-    .map((entry) => {
-      return `
-        <li>
-          <strong>Q${entry.step}.</strong>
-          ${escapeHtml(entry.text)}<br />
-          回答: ${escapeHtml(getAnswerLabel(entry.answer))}
-        </li>
-      `;
+function renderHistoryOptionSelect({ id, label, value }) {
+  const optionMarkup = historyOptions
+    .map((option) => {
+      return `<option value="${escapeHtml(option.value)}" ${option.value === value ? "selected" : ""}>${escapeHtml(option.label)}</option>`;
     })
     .join("");
+
+  return `
+    <div class="field">
+      <label for="${escapeHtml(id)}">${escapeHtml(label)}</label>
+      <select id="${escapeHtml(id)}" name="${escapeHtml(id)}" aria-label="${escapeHtml(label)}">
+        <option value="">選択してください</option>
+        ${optionMarkup}
+      </select>
+    </div>
+  `;
 }
 
 function renderResult() {
-  const result = results[state.resultId];
+  if (!state.resultId) {
+    return `
+      <section class="info-block" aria-labelledby="guide-title">
+        <h3 id="guide-title">判定方法</h3>
+        <ul class="history-list">
+          <li>① デジタル化枠 / インボイス枠の交付決定歴を選択してください。</li>
+          <li>② 通常枠の交付決定歴を選択してください。</li>
+          <li>A〜E の判定結果を表示します。</li>
+        </ul>
+      </section>
+    `;
+  }
 
-  app.innerHTML = `
+  const result = resultPatterns[state.resultId];
+  const invoiceStatus = getInvoiceStatus(state.invoiceHistory);
+  const normalStatus = getNormalStatus(state.normalHistory);
+
+  return `
     <section class="result-panel" aria-labelledby="result-title">
       <div>
-        <p class="result-copy">回答内容をもとにした簡易判定です。</p>
         <h2 id="result-title">${escapeHtml(result.title)}</h2>
         <p class="result-copy">${escapeHtml(result.summary)}</p>
       </div>
 
       <div class="result-grid">
-        ${renderStatusCard(result.normal)}
-        ${renderStatusCard(result.invoice)}
+        ${renderStatusCard(invoiceStatus)}
+        ${renderStatusCard(normalStatus)}
       </div>
 
-      <section class="info-block" aria-labelledby="history-title">
-        <h3 id="history-title">回答履歴</h3>
-        <ul class="history-list">
-          ${renderHistory()}
-        </ul>
+      <section class="info-block" aria-labelledby="requirement-title">
+        <h3 id="requirement-title">${escapeHtml(result.requirementTitle)}</h3>
+        <p class="result-copy">${escapeHtml(result.requirementBody)}</p>
       </section>
 
-      <p class="note">本チェック結果は簡易判定です。実際の申請可否は公募要領・事務局の案内をご確認ください。</p>
+      <section class="info-block" aria-labelledby="additional-title">
+        <h3 id="additional-title">${escapeHtml(result.additionalTitle)}</h3>
+        <p class="result-copy">${escapeHtml(result.additionalBody)}</p>
+      </section>
 
-      <div class="result-actions">
-        <button type="button" class="reset-button" id="reset-button" aria-label="最初からやり直す">
-          最初からやり直す
-        </button>
-      </div>
+      <p class="note">本チェック結果は簡易判定です。実際の申請可否は公募要領・事務局の最新案内をご確認ください。</p>
     </section>
   `;
-
-  document.getElementById("reset-button").addEventListener("click", resetState);
-}
-
-function handleAnswer(answer) {
-  const question = questions[state.currentQuestionId];
-  const branch = answer ? question.yes : question.no;
-
-  state.answers.push({
-    id: question.id,
-    step: question.step,
-    text: question.text,
-    answer,
-  });
-
-  if (branch.type === "result") {
-    state.resultId = branch.next;
-  } else {
-    state.currentQuestionId = branch.next;
-  }
-
-  render();
 }
 
 function render() {
-  if (state.resultId) {
-    renderResult();
-    return;
-  }
+  app.innerHTML = `
+    <section class="check-panel" aria-labelledby="check-title">
+      <div class="section-heading">
+        <p class="section-heading__eyebrow">申請可否チェック</p>
+        <h2 id="check-title">交付決定歴から 申請可否（ A〜E ）を判定</h2>
+        <p class="section-heading__lead">
+          交付決定歴を2項目選ぶだけで通常枠・インボイス枠の申請可否を確認できます。
+        </p>
+      </div>
 
-  renderQuestion();
+      <form class="decision-form" id="decision-form">
+        <div class="search-form__grid">
+          ${renderHistoryOptionSelect({
+            id: "invoice-history",
+            label: "デジタル化枠 / インボイス枠の交付決定歴",
+            value: state.invoiceHistory,
+          })}
+          ${renderHistoryOptionSelect({
+            id: "normal-history",
+            label: "通常枠の交付決定歴",
+            value: state.normalHistory,
+          })}
+        </div>
+
+        <div class="search-actions">
+          <button type="submit" class="search-button">判定する</button>
+          <button type="button" class="secondary-button" id="reset-button">リセット</button>
+        </div>
+
+        ${state.error ? `<p class="search-status" role="alert">${escapeHtml(state.error)}</p>` : ""}
+      </form>
+
+      ${renderResult()}
+    </section>
+  `;
+
+  document.getElementById("decision-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const invoiceHistory = document.getElementById("invoice-history").value;
+    const normalHistory = document.getElementById("normal-history").value;
+
+    state.invoiceHistory = invoiceHistory;
+    state.normalHistory = normalHistory;
+
+    if (!invoiceHistory || !normalHistory) {
+      state.resultId = null;
+      state.error = "2項目とも選択してください。";
+      render();
+      return;
+    }
+
+    if (!isValidHistoryValue(invoiceHistory) || !isValidHistoryValue(normalHistory)) {
+      state.resultId = null;
+      state.error = "入力値が不正です。画面から選択し直してください。";
+      render();
+      return;
+    }
+
+    state.error = "";
+    state.resultId = determineResultId(invoiceHistory, normalHistory);
+    render();
+  });
+
+  document.getElementById("reset-button").addEventListener("click", resetState);
 }
 
 function setActiveTab(tabName) {
@@ -309,15 +358,19 @@ function normalizeCorporateNumber(value) {
 }
 
 function mapJsonRowToRecord(columns) {
-  const corporateNumber = columns[0] || "";
-  const businessName = columns[1] || "";
+  if (!Array.isArray(columns)) {
+    throw new Error("検索JSONの行データ形式が不正です。");
+  }
+
+  const corporateNumber = sanitizeCorporateNumberInput(columns[0]);
+  const businessName = toSafeText(columns[1]);
 
   return {
     corporateNumber,
     businessName,
-    fiscalYear: columns[2] || "",
-    category: columns[3] || "",
-    round: columns[4] || "",
+    fiscalYear: toSafeText(columns[2], 20),
+    category: toSafeText(columns[3], 80),
+    round: toSafeText(columns[4], 40),
     normalizedCorporateNumber: normalizeCorporateNumber(corporateNumber),
     normalizedBusinessName: normalizeText(businessName),
   };
@@ -346,11 +399,21 @@ async function prepareSearchData() {
       throw new Error(`検索JSONの取得に失敗しました: ${response.status}`);
     }
 
+    const contentType = response.headers.get("content-type") || "";
+
+    if (!contentType.includes("application/json")) {
+      throw new Error("検索JSONのContent-Typeが不正です。");
+    }
+
     const payload = await response.json();
     const sourceRows = Array.isArray(payload?.rows) ? payload.rows : null;
 
     if (!sourceRows) {
       throw new Error("検索JSONの形式が不正です。");
+    }
+
+    if (sourceRows.length > MAX_SEARCH_RECORD_COUNT) {
+      throw new Error("検索JSONの件数が想定を超えています。");
     }
 
     const preparedRecords = [];
@@ -420,8 +483,10 @@ function searchRecords() {
 async function handleSearchSubmit(event) {
   event.preventDefault();
 
-  searchState.criteria.corporateNumber = document.getElementById("search-corporate-number").value;
-  searchState.criteria.name = document.getElementById("search-business-name").value;
+  searchState.criteria.corporateNumber = sanitizeCorporateNumberInput(
+    document.getElementById("search-corporate-number").value,
+  );
+  searchState.criteria.name = sanitizeNameInput(document.getElementById("search-business-name").value);
 
   if (!searchState.loaded) {
     await prepareSearchData();
@@ -505,6 +570,7 @@ function renderSearch() {
                 name="corporateNumber"
                 type="text"
                 inputmode="numeric"
+                maxlength="32"
                 placeholder="例: 1234567890123"
                 value="${escapeHtml(searchState.criteria.corporateNumber)}"
                 aria-label="法人番号で検索"
@@ -518,6 +584,7 @@ function renderSearch() {
                 id="search-business-name"
                 name="businessName"
                 type="text"
+                maxlength="${MAX_NAME_QUERY_LENGTH}"
                 placeholder="例: 株式会社○○ / ○○商店"
                 value="${escapeHtml(searchState.criteria.name)}"
                 aria-label="事業者名・個人事業主名・屋号で検索"

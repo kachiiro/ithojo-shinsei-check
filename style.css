@@ -234,7 +234,9 @@ textarea {
 }
 
 .question-panel,
-.result-panel {
+.result-panel,
+.check-panel,
+.decision-form {
   display: grid;
   gap: 24px;
 }
@@ -413,6 +415,15 @@ textarea {
   color: var(--text);
 }
 
+.field select {
+  min-height: 52px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--text);
+}
+
 .field input[type="file"] {
   padding: 10px 12px;
   background: #f8fbff;
@@ -430,7 +441,8 @@ textarea {
   cursor: pointer;
 }
 
-.field input:focus-visible {
+.field input:focus-visible,
+.field select:focus-visible {
   outline: 3px solid rgba(13, 92, 171, 0.2);
   outline-offset: 2px;
   border-color: var(--primary);
