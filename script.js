@@ -398,14 +398,19 @@ async function prepareSearchData() {
     if (!response.ok) {
       throw new Error(`検索JSONの取得に失敗しました: ${response.status}`);
     }
+    const responseText = await response.text();
+    let payload;
 
-    const contentType = response.headers.get("content-type") || "";
+    try {
+      payload = JSON.parse(responseText);
+    } catch (parseError) {
+      if (responseText.trimStart().startsWith("<")) {
+        throw new Error("検索JSONの代わりにHTMLが返されました。GitHub Pages の公開対象に JSON ファイルが含まれているか確認してください。");
+      }
 
-    if (!contentType.includes("application/json")) {
-      throw new Error("検索JSONのContent-Typeが不正です。");
+      throw new Error("検索JSONを解析できませんでした。");
     }
 
-    const payload = await response.json();
     const sourceRows = Array.isArray(payload?.rows) ? payload.rows : null;
 
     if (!sourceRows) {
