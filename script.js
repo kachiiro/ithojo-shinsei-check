@@ -9,7 +9,7 @@ const VALID_HISTORY_VALUES = new Set(historyOptions.map((option) => option.value
 const MAX_CORPORATE_NUMBER_LENGTH = 13;
 const MAX_NAME_QUERY_LENGTH = 120;
 const MAX_RECORD_FIELD_LENGTH = 160;
-const MAX_SEARCH_RECORD_COUNT = 200000;
+const MAX_SEARCH_RECORD_COUNT = 300000;
 
 const resultPatterns = {
   A: {
@@ -439,7 +439,8 @@ async function prepareSearchData() {
     searchState.sourceLabel = `2022〜2025検索JSON ${preparedRecords.length.toLocaleString("ja-JP")}件`;
     searchState.statusMessage = `${preparedRecords.length.toLocaleString("ja-JP")}件の2022〜2025年度採択者一覧を検索できます。`;
   } catch (error) {
-    searchState.error = "2022〜2025年度の検索JSONを読み込めませんでした。GitHub Pages などHTTP配信環境で開いているか確認してください。";
+    const errorMessage = error instanceof Error ? error.message : "";
+    searchState.error = errorMessage || "2022〜2025年度の検索JSONを読み込めませんでした。GitHub Pages などHTTP配信環境で開いているか確認してください。";
     searchState.statusMessage = "検索データを読み込めませんでした。";
   } finally {
     searchState.loading = false;
